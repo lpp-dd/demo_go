@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"flag"
 	"fmt"
 	"image"
 	"image/color"
@@ -8,6 +11,8 @@ import (
 	"log"
 	"math"
 	"os"
+	"strings"
+	"unicode/utf8"
 )
 
 func main() {
@@ -108,6 +113,114 @@ two line`
 	swap(&a, &b)
 
 	fmt.Println(a, b)
+
+	//基于flag包 创建一个 字符串类型的指针 mode
+	var mode = flag.String("mode", "", "this is mode")
+	fmt.Printf("%T\n", mode) //*string
+
+	//基于new函数创建指针变量
+	ptr2 := new(string)
+	*ptr2 = "value by ptr2"
+	str2 := *ptr2                  //这步相当于声明了一个value值为 value by ptr2 的字符串，会在内存中开辟新的内存空间 类似于java中 new String("");
+	fmt.Println(&str2, ptr2, str2) //0xc000030480 0xc000030470 value by ptr2
+
+	//打印字符串的长度
+	str3 := "this is str"
+	fmt.Println(len(str3)) //11
+	str4 := "测试"
+	fmt.Println(len(str4)) //6 这里的6代表字节个数
+
+	//打印字符个数
+	fmt.Println(utf8.RuneCountInString(str4 + "abc"))
+
+	//字符串遍历
+	for _, s := range str4 {
+		fmt.Printf("%c  %d\n", s, s)
+	}
+
+	tracer := "测试字符串123"
+	//获取字符串指定字符所在位置的索引 这里获取是是按照ASCII编码，一个汉字算3个字符长度
+	comma := strings.Index(tracer, "1")
+	fmt.Println(comma)
+
+	/*这边使用 rune数组来将字符串转换为字符数组
+	  有两种字符 byte 和 rune， rune相当于java中的char
+		byte对应的是ASCII编码格式
+		rune对应的是Unicode
+	*/
+	str5 := "测试12345"
+	byteArr5 := []rune(str5)
+	for i := 0; i < len(byteArr5); i++ {
+		fmt.Println(string(byteArr5[i]))
+	}
+
+	//字符串拼接
+	var stringBuilder bytes.Buffer
+	stringBuilder.WriteString("abc")
+	stringBuilder.WriteString("123")
+	fmt.Println(stringBuilder.String())
+
+	//读取kv格式文件
+	fileName := "kv.txt"
+	iniFile, err := os.Open(fileName)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	reader := bufio.NewReader(iniFile)
+	var key string = "name"
+	for {
+		lineStr, err := reader.ReadString('\n') //读取字符串直到\n 表示读取一行 因为换行符为\t\n
+		if err != nil {
+			fmt.Println(err.Error()) //EOF  golang之文件结尾错误（EOF） EOF就表示文件到了结尾，通过异常来判断读文件是否结束
+			break
+		}
+		lineStr = strings.TrimSpace(lineStr)
+		if lineStr == "" {
+			continue
+		}
+
+		var pair []string = strings.Split(lineStr, "=")
+
+		if len(pair) == 2 {
+			//键值对
+			currentKey := strings.TrimSpace(pair[0])
+			if currentKey == key {
+				println(strings.TrimSpace(pair[1]))
+			}
+		}
+	}
+	defer iniFile.Close() //defer和Java中finally相似 表示程序结束前执行
+
+	//声明常量
+	const c1 string = "constant"
+
+	//自定义数据类型
+	type newInt int     //定义了一个新的类型叫 newInt 默认按照int的类型看待
+	type intAlias = int //定义了int的别名，本质就是int
+
+	var newIntA newInt = 1
+	var intB intAlias = 2
+
+	fmt.Printf("%T\n", newIntA) //main.newInt
+	fmt.Printf("%T\n", intB)    //int
+
+	//声明数组
+	arr2 := [...]string{"a", "b", "c"}
+	fmt.Println(arr2)
+
+	for k, v := range arr2 {
+		fmt.Println(k, v)
+	}
+
+	for i := 0; i < len(arr2); i++ {
+		fmt.Println(i, arr2[i])
+	}
+
+	//声明切片
+	var slice1 []int
+	fmt.Println(slice1 == nil) //true
 
 }
 
