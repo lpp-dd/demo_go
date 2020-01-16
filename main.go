@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	list2 "container/list"
 	"flag"
 	"fmt"
 	"image"
@@ -12,6 +13,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"sync"
 	"unicode/utf8"
 )
 
@@ -218,9 +220,99 @@ two line`
 		fmt.Println(i, arr2[i])
 	}
 
-	//声明切片
+	//声明切片 切片的声明不需要声明长度，凡是带有长度声明的都是数组
 	var slice1 []int
 	fmt.Println(slice1 == nil) //true
+	//基于make函数声明切片
+	slice2 := make([]int, 2, 10) //声明一个大小为2 初始化分配内存空间10的切片
+	slice3 := make([]int, 2)     //单纯的声明一个大小为2的切片
+	fmt.Println(slice2)          //[0 0] len() = 2
+	fmt.Println(slice3)          //[0 0] len() = 2
+	slice2 = append(slice2, 1, 2, 3)
+	fmt.Println(slice2) //[0 0 1 2 3]
+
+	//切片复制 基于copy复制的是值，复制完是两个具有相同元素的不同切片
+	const sliceLength int = 10
+	var srcSlice = make([]int, sliceLength)
+	for i := 0; i < sliceLength; i++ {
+		srcSlice[i] = i
+	}
+	var destSlice = make([]int, sliceLength) //目标切片必须要先定义长度，否则会报错
+	copy(destSlice, srcSlice)
+	var refSlice = srcSlice
+	srcSlice[0] = 10
+	fmt.Println(destSlice[0], refSlice[0]) //0 10
+
+	//切片删除指定元素 没有api只能手动切然后再拼 如果需要做大量的增删不建议使用切片的数据结构
+	slice4 := []int{1, 2, 3, 4, 5}
+	deleteIndex := 1
+	slice4 = append(slice4[:1], slice4[deleteIndex+1:]...) //在新的切片后面添加上...表示添加整个切片
+	fmt.Println(slice4)
+
+	//map
+	//声明
+	map1 := make(map[string]int) //声明一个key为string， value为int的map
+	//添加元素
+	map1["xiaoming"] = 90
+	map1["xiaohong"] = 80
+	map1["xiaohei"] = 85
+	fmt.Println("after add")
+	for k, v := range map1 {
+		fmt.Println(k, v)
+	}
+
+	//删除元素
+	fmt.Println("after delete")
+	delete(map1, "xiaoming")
+	for k, v := range map1 {
+		fmt.Println(k, v)
+	}
+
+	//修改元素
+	map1["xiaohei"] = 88
+	fmt.Println("after change")
+	for k, v := range map1 {
+		fmt.Println(k, v)
+	}
+
+	//遍历查询
+	fmt.Println("final println")
+	for k, v := range map1 {
+		fmt.Println(k, v)
+	}
+	//获取指定key ok表示是否含有当前元素
+	xiaohei_score, ok1 := map1["xiaohei"]
+	xiaoming_score, ok2 := map1["xiaoming"]
+	fmt.Println(xiaohei_score, ok1)  //88 true
+	fmt.Println(xiaoming_score, ok2) //0 false
+
+	//concurrent map
+	var ccmap sync.Map
+	ccmap.Store("name", "xiaoming")
+	ccmap.Store("age", 11)
+	map_value, ok3 := ccmap.Load("name")
+	fmt.Println(map_value, ok3)
+	ccmap.Delete("name")
+
+	//list
+	my_list := list2.New()
+	//var my_list2 list2.List
+
+	//add
+	my_list.PushBack(1)  //列表后插入
+	my_list.PushFront(2) //列表前插入
+
+	element := my_list.PushBack(3) //返回值为当前元素的地址值
+	my_list.InsertBefore(4, element)
+	my_list.PushBack(5)
+
+	//遍历并删除指定元素 不存在并发修改异常
+	for i := my_list.Front(); i != nil; i = i.Next() {
+		fmt.Println(i.Value)
+		if i.Value == 5 {
+			my_list.Remove(i)
+		}
+	}
 
 }
 
