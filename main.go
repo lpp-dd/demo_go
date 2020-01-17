@@ -314,6 +314,24 @@ two line`
 		}
 	}
 
+	/*流程控住语句
+	if
+	for
+	for-range
+	switch-case
+	break
+	continue 和java中用法一样，扩展了和break一样的loop标识
+	*/
+
+	//定义一个标签
+goTag:
+	fmt.Println("this is goto content")
+	return
+
+	if 1 == 1 {
+		goto goTag
+	}
+
 }
 
 /*
