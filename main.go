@@ -323,14 +323,55 @@ two line`
 	continue 和java中用法一样，扩展了和break一样的loop标识
 	*/
 
+	i := 0
 	//定义一个标签
-goTag:
-	fmt.Println("this is goto content")
-	return
-
-	if 1 == 1 {
+	if i == 2 {
+	} else {
 		goto goTag
 	}
+goTag:
+	fmt.Println("this is goto content and i is ", i)
+	i++
+
+	//方法是值传递
+	var st1 = struct1{
+		a: 0,
+		b: "",
+		c: &struct1{
+			a: 0,
+			b: "",
+			c: nil,
+		},
+	}
+	fmt.Printf("before st1: %p\n", &st1)
+	fmt.Printf("before st1 value: %+v\n", st1)
+	fmt.Printf("before st1.c.a value: %+v\n", st1.c.a)
+	fmt.Printf("before st1.a value: %+v\n", st1.a)
+	st2 := passByValue(st1)
+	fmt.Printf("after st1: %p\n", &st1)
+	fmt.Printf("after st1 value: %+v\n", st1)
+	fmt.Printf("after st1.c.a value: %+v\n", st1.c.a)
+	fmt.Printf("after st1.a value: %+v\n", st1.a)
+	fmt.Printf("st2: %p\n", &st2)
+	/*
+		before st1: 0xc0000046e0
+		before st1 value: {a:0 b: c:0xc000004700}
+		before st1.c.a value: 0
+		before st1.a value: 0
+		func inner s: 0xc000004760
+		func inner s value: {a:0 b: c:0xc000004700}
+		after st1: 0xc0000046e0
+		after st1 value: {a:0 b: c:0xc000004700}
+		after st1.c.a value: 1
+		after st1.a value: 0
+		st2: 0xc000004740
+
+		结论：
+		golang中结构体作为方法入参时，会重新复制一块内存地址，结构体的属性，按照值传递的方式进行传递
+			  基本数据类型的属性，在方法中修改值，是修改的值副本，不会对原结构体造成影响，而结构体类型的属性在方法中修改结构体的属性，会生效，因为结构体属性传递的是引用副本
+			  所以为了实现类似于java中的传递引用副本的相似功能，避免对属性进行完全copy，方法参数数据类型为*struct,直接传递结构体的指针
+		java中类对象作为方法入参时，会直接按照值传递的方式进行，直接传递引用副本
+	*/
 
 }
 
@@ -341,4 +382,18 @@ func swap(a *int, b *int) {
 	c := *a //a指针指向的值赋值给c
 	*a = *b //b指针指向的值赋值给a
 	*b = c  //临时变量c的值赋值给b
+}
+
+type struct1 struct {
+	a int
+	b string
+	c *struct1
+}
+
+func passByValue(s struct1) struct1 {
+	fmt.Printf("func inner s: %p\n", &s)
+	fmt.Printf("func inner s value: %+v\n", s)
+	s.c.a = 1
+	s.a = 1
+	return s
 }
